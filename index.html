@@ -48,6 +48,31 @@
     z-index:20;
     background:var(--slate);
   }
+  .jump-nav-bar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .hamburger-btn{
+    display:none;
+    background:none;
+    border:none;
+    padding:15px 20px;
+    cursor:pointer;
+    flex-shrink:0;
+    margin-left:auto;
+  }
+  .hamburger-btn span{
+    display:block;
+    width:22px;
+    height:2px;
+    background:var(--chalk);
+    margin:5px 0;
+    transition:transform 0.2s ease, opacity 0.2s ease;
+  }
+  .jump-nav.is-open .hamburger-btn span:nth-child(1){ transform:translateY(7px) rotate(45deg); }
+  .jump-nav.is-open .hamburger-btn span:nth-child(2){ opacity:0; }
+  .jump-nav.is-open .hamburger-btn span:nth-child(3){ transform:translateY(-7px) rotate(-45deg); }
   .jump-nav-track{
     display:flex;
     gap:2px;
@@ -67,6 +92,25 @@
     white-space:nowrap;
   }
   .jump-nav a:hover{ color:var(--chalk); border-bottom-color:var(--bulb); }
+
+  @media (max-width: 760px){
+    .hamburger-btn{ display:block; }
+    .jump-nav-track{
+      display:none;
+      flex-direction:column;
+      gap:0;
+      width:100%;
+      overflow-x:visible;
+      border-top:1px solid rgba(255,255,255,0.1);
+    }
+    .jump-nav.is-open .jump-nav-track{ display:flex; }
+    .jump-nav a{
+      padding:16px 24px;
+      border-bottom:1px solid rgba(255,255,255,0.08);
+      border-left:3px solid transparent;
+    }
+    .jump-nav a:hover{ border-bottom-color:rgba(255,255,255,0.08); border-left-color:var(--bulb); }
+  }
 
   /* ===== Hero: real venue photo backdrop ===== */
   .hero{
@@ -334,6 +378,29 @@
     overflow:hidden;
   }
   .reel-frame iframe{ width:100%; height:100%; border:0; }
+  .reel-thumb{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+  .reel-play{
+    position:absolute;
+    top:50%; left:50%;
+    transform:translate(-50%, -50%);
+    width:56px; height:56px;
+    border-radius:50%;
+    background:rgba(28,23,18,0.75);
+    border:2px solid var(--bulb);
+    color:var(--chalk);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    transition:transform 0.15s ease, background 0.15s ease;
+  }
+  .reel-play:hover{ transform:translate(-50%, -50%) scale(1.08); background:var(--rust); }
+  .reel-play svg{ margin-left:3px; }
   .reel-frame.is-empty{
     display:flex;
     align-items:center;
@@ -484,8 +551,67 @@
   footer .foot-links a:hover{ color:var(--bulb); }
   footer .copyright{ font-size:12px; color:#6d6353; margin-top:20px; }
 
+  /* ===== Back to top ===== */
+  #back-to-top{
+    position:fixed;
+    right:20px;
+    bottom:24px;
+    width:44px;
+    height:44px;
+    border-radius:50%;
+    background:var(--slate);
+    color:var(--chalk);
+    border:2px solid var(--bulb);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    z-index:30;
+    opacity:0;
+    pointer-events:none;
+    transform:translateY(8px);
+    transition:opacity 0.2s ease, transform 0.2s ease, bottom 0.2s ease, left 0.2s ease, right 0.2s ease;
+    box-shadow:0 6px 16px rgba(28,23,18,0.3);
+  }
+  #back-to-top.is-visible{ opacity:1; pointer-events:auto; transform:translateY(0); }
+  #back-to-top:hover{ background:var(--rust); }
+
+  /* ===== Mobile book FAB (mic icon) ===== */
+  #mobile-book-bar{
+    display:none;
+    position:fixed;
+    right:20px;
+    bottom:24px;
+    height:52px;
+    padding:0 20px 0 16px;
+    border-radius:999px;
+    background:var(--bulb);
+    color:var(--slate);
+    align-items:center;
+    justify-content:center;
+    gap:9px;
+    text-decoration:none;
+    font-family:'Work Sans', sans-serif;
+    font-weight:700;
+    font-size:14px;
+    white-space:nowrap;
+    z-index:29;
+    box-shadow:0 8px 20px rgba(28,23,18,0.35);
+    transition:transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  #mobile-book-bar:active{ transform:scale(0.96); }
+
   /* ===== Responsive ===== */
   @media (max-width: 760px){
+    #mobile-book-bar{
+      display:flex;
+      bottom:calc(24px + env(safe-area-inset-bottom, 0px));
+    }
+    #back-to-top{
+      right:auto;
+      left:20px;
+      bottom:calc(24px + env(safe-area-inset-bottom, 0px));
+    }
     section{ padding:52px 0; }
     .hero-inner{ padding:64px 24px 56px; }
     .about-grid, .booking-grid{ grid-template-columns:1fr; gap:30px; }
@@ -500,14 +626,18 @@
 </head>
 <body>
 
-  <nav class="jump-nav">
-    <div class="wrap jump-nav-track">
-      <a href="#reel">Reel</a>
-      <a href="#photos">Photos</a>
-      <a href="#about">About</a>
-      <a href="#follow">Follow</a>
-      <a href="#booking">Book</a>
-      <a href="#shows">Shows</a>
+  <nav class="jump-nav" id="site-nav">
+    <div class="wrap jump-nav-bar">
+      <button class="hamburger-btn" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="jump-nav-track">
+        <a href="#reel">Reel</a>
+        <a href="#photos">Photos</a>
+        <a href="#about">About</a>
+        <a href="#follow">Follow</a>
+        <a href="#booking">Book</a>
+      </div>
     </div>
   </nav>
 
@@ -533,35 +663,23 @@
       <div class="reel-carousel">
         <div class="reel-item">
           <span class="tape-label">relationships</span>
-          <div class="reel-frame">
-            <iframe
-              src="https://www.youtube.com/embed/HTIpNZngbO0"
-              title="Josh Mannas — relationships clip"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowfullscreen
-              loading="lazy"></iframe>
+          <div class="reel-frame reel-lazy" data-video-id="HTIpNZngbO0" data-title="Josh Mannas — relationships clip">
+            <img class="reel-thumb" src="https://img.youtube.com/vi/HTIpNZngbO0/hqdefault.jpg" alt="Josh Mannas — relationships clip thumbnail" loading="lazy">
+            <button class="reel-play" aria-label="Play relationships clip"><svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M8 5v14l11-7z"/></svg></button>
           </div>
         </div>
         <div class="reel-item">
           <span class="tape-label">parenting</span>
-          <div class="reel-frame">
-            <iframe
-              src="https://www.youtube.com/embed/A5K-eEjflr0"
-              title="Josh Mannas — parenting clip"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowfullscreen
-              loading="lazy"></iframe>
+          <div class="reel-frame reel-lazy" data-video-id="A5K-eEjflr0" data-title="Josh Mannas — parenting clip">
+            <img class="reel-thumb" src="https://img.youtube.com/vi/A5K-eEjflr0/hqdefault.jpg" alt="Josh Mannas — parenting clip thumbnail" loading="lazy">
+            <button class="reel-play" aria-label="Play parenting clip"><svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M8 5v14l11-7z"/></svg></button>
           </div>
         </div>
         <div class="reel-item">
           <span class="tape-label">personal experiences</span>
-          <div class="reel-frame">
-            <iframe
-              src="https://www.youtube.com/embed/raE0EYh3r0A"
-              title="Josh Mannas — personal experiences clip"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowfullscreen
-              loading="lazy"></iframe>
+          <div class="reel-frame reel-lazy" data-video-id="raE0EYh3r0A" data-title="Josh Mannas — personal experiences clip">
+            <img class="reel-thumb" src="https://img.youtube.com/vi/raE0EYh3r0A/hqdefault.jpg" alt="Josh Mannas — personal experiences clip thumbnail" loading="lazy">
+            <button class="reel-play" aria-label="Play personal experiences clip"><svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M8 5v14l11-7z"/></svg></button>
           </div>
         </div>
       </div>
@@ -673,36 +791,6 @@
     </div>
   </section>
 
-  <section class="shows wrap" id="shows">
-    <div class="section-head">
-      <h2>Where I've been, where I'm headed</h2>
-    </div>
-    <div class="show-list">
-      <div class="ticket">
-        <div class="ticket-date">
-          <span class="ticket-day">12</span>
-          <span class="ticket-mon">Sep</span>
-        </div>
-        <div class="ticket-info">
-          <p class="ticket-tag">Last show</p>
-          <p class="ticket-venue">Mason County Search &amp; Rescue Comedy Night</p>
-          <p class="ticket-city">Shelton, WA</p>
-        </div>
-      </div>
-      <div class="ticket">
-        <div class="ticket-date">
-          <span class="ticket-day">25</span>
-          <span class="ticket-mon">Sep</span>
-        </div>
-        <div class="ticket-info">
-          <p class="ticket-tag">Next show</p>
-          <p class="ticket-venue">House of Smith Wines</p>
-          <p class="ticket-city">Walla Walla, WA</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <footer>
     <div class="wrap">
       <span class="foot-name">Josh Mannas</span>
@@ -715,7 +803,55 @@
     <div class="wrap"><p class="copyright">© 2026 Josh Mannas Comedy. All rights reserved.</p></div>
   </footer>
 
+  <button id="back-to-top" aria-label="Back to top">
+    <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 4l-8 8h5v8h6v-8h5z"/></svg>
+  </button>
+
+  <a id="mobile-book-bar" href="#booking" aria-label="Book Josh">
+    <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5-3c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+    <span>Book Josh</span>
+  </a>
+
   <script>
+    var backToTop = document.getElementById('back-to-top');
+    window.addEventListener('scroll', function(){
+      if (window.scrollY > 500) {
+        backToTop.classList.add('is-visible');
+      } else {
+        backToTop.classList.remove('is-visible');
+      }
+    });
+    backToTop.addEventListener('click', function(){
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    document.querySelectorAll('.reel-lazy').forEach(function(frame){
+      frame.querySelector('.reel-play').addEventListener('click', function(){
+        var videoId = frame.getAttribute('data-video-id');
+        var title = frame.getAttribute('data-title');
+        var iframe = document.createElement('iframe');
+        iframe.src = 'https://www.youtube.com/embed/' + videoId + '?autoplay=1';
+        iframe.title = title;
+        iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+        iframe.allowFullscreen = true;
+        frame.innerHTML = '';
+        frame.appendChild(iframe);
+      });
+    });
+
+    var siteNav = document.getElementById('site-nav');
+    var navToggle = document.getElementById('nav-toggle');
+    navToggle.addEventListener('click', function(){
+      var isOpen = siteNav.classList.toggle('is-open');
+      navToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+    document.querySelectorAll('.jump-nav-track a').forEach(function(link){
+      link.addEventListener('click', function(){
+        siteNav.classList.remove('is-open');
+        navToggle.setAttribute('aria-expanded', 'false');
+      });
+    });
+
     document.getElementById('booking-form').addEventListener('submit', function(e){
       e.preventDefault();
       const f = new FormData(e.target);
